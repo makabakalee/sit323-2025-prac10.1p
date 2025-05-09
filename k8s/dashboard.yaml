@@ -1,0 +1,44 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: Dashboard
+metadata:
+  name: calculator-app-dashboard
+  namespace: default
+spec:
+  displayName: "Calculator Application Dashboard"
+  dashboardGroups:
+  - displayName: "Application Performance"
+    dashboardWidgets:
+    - title: "Request Duration"
+      xyChart:
+        dataSets:
+        - timeSeriesQuery:
+            timeSeriesFilter:
+              filter: 'metric.type="prometheus.googleapis.com/http_request_duration_ms/gauge" resource.type="k8s_container" metadata.user_labels.app="node-web-app"'
+              aggregation:
+                perSeriesAligner: ALIGN_MEAN
+    - title: "API Requests Count"
+      xyChart:
+        dataSets:
+        - timeSeriesQuery:
+            timeSeriesFilter:
+              filter: 'metric.type="prometheus.googleapis.com/api_requests_total/counter" resource.type="k8s_container" metadata.user_labels.app="node-web-app"'
+              aggregation:
+                perSeriesAligner: ALIGN_SUM
+  - displayName: "Resource Utilization"
+    dashboardWidgets:
+    - title: "CPU Usage"
+      xyChart:
+        dataSets:
+        - timeSeriesQuery:
+            timeSeriesFilter:
+              filter: 'metric.type="kubernetes.io/container/cpu/usage_time" resource.type="k8s_container" resource.labels.container_name="node-web-container"'
+              aggregation:
+                perSeriesAligner: ALIGN_RATE
+    - title: "Memory Usage"
+      xyChart:
+        dataSets:
+        - timeSeriesQuery:
+            timeSeriesFilter:
+              filter: 'metric.type="kubernetes.io/container/memory/used_bytes" resource.type="k8s_container" resource.labels.container_name="node-web-container"'
+              aggregation:
+                perSeriesAligner: ALIGN_MEAN 

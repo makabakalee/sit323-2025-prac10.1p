@@ -1,0 +1,27 @@
+apiVersion: monitoring.googleapis.com/v1
+kind: AlertPolicy
+metadata:
+  name: high-request-duration-alert
+  namespace: default
+spec:
+  displayName: "High Request Duration Alert"
+  documentation:
+    content: "This alert is triggered when the average request duration exceeds 500ms"
+    mimeType: "text/markdown"
+  conditions:
+  - displayName: "High Average Request Duration"
+    conditionThreshold:
+      filter: 'metric.type="prometheus.googleapis.com/http_request_duration_ms/gauge" resource.type="k8s_container" metadata.user_labels.app="node-web-app"'
+      aggregations:
+      - alignmentPeriod: 60s
+        perSeriesAligner: ALIGN_MEAN
+      comparison: COMPARISON_GT
+      thresholdValue: 500
+      duration: 60s
+      trigger:
+        count: 1
+  alertStrategy:
+    autoClose: 3600s
+  severity: WARNING
+  notification_channels:
+  - name: "projects/PROJECT_ID/notificationChannels/CHANNEL_ID" 
