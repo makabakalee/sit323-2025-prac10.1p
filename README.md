@@ -6,10 +6,10 @@ This is a simple calculator microservice with monitoring and observability featu
 
 - Basic calculator operations: addition, subtraction, multiplication, division, etc.
 - Operation history stored in MongoDB
-- Monitoring using Prometheus and GCP Cloud Monitoring
+- GCP Monitoring using Stackdriver Dashboard
 - Health check endpoint for Kubernetes probes
 - Resource utilization monitoring
-- Custom dashboards and alert policies
+- Sample alerts (optional configuration)
 
 ## Prerequisites
 
@@ -19,8 +19,6 @@ This is a simple calculator microservice with monitoring and observability featu
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - MongoDB (deployed using Docker Compose or Kubernetes)
 - Google Cloud Platform account
-
-
 
 ## Local Execution
 
@@ -41,19 +39,6 @@ docker run -d -p 27017:27017 --name mongodb mongo
 ```bash
 node app.js
 ```
-
-4. Access the API:
-
-- Addition: http://localhost:3002/add?num1=5&num2=3
-- Subtraction: http://localhost:3002/subtract?num1=5&num2=3
-- Multiplication: http://localhost:3002/multiply?num1=5&num2=3
-- Division: http://localhost:3002/divide?num1=6&num2=3
-- Square Root: http://localhost:3002/sqrt?num1=9
-- Exponentiation: http://localhost:3002/power?num1=2&num2=3
-- Modulo: http://localhost:3002/mod?num1=7&num2=3
-- View History: http://localhost:3002/history
-- Monitoring Metrics: http://localhost:3002/metrics
-- Health Check: http://localhost:3002/health
 
 ## Deployment to GCP
 
@@ -84,60 +69,62 @@ chmod +x deploy-to-gcp.sh
 
 The script will:
 - Log in to GCP
-- Create a GKE cluster
-- Build and push Docker images
+- Create a GKE cluster in `australia-southeast1`
+- Build and push Docker images to Artifact Registry
 - Deploy MongoDB and the application
 - Configure monitoring and logging
 - Return the application URL
 
 ## Monitoring and Observability
 
-### Prometheus Metrics
+### Metrics
 
-The application exposes the following Prometheus metrics at the `/metrics` endpoint:
+While the application exposes a `/metrics` endpoint in Prometheus-compatible format, this project primarily uses GCP Stackdriver Monitoring for observability.
 
-- `http_request_duration_ms` - HTTP request duration (milliseconds)
-- `api_requests_total` - Total API requests
-- Node.js default metrics (memory usage, GC, etc.)
+### GCP Cloud Monitoring
 
-### GCP Cloud Monitoring (Stackdriver)
+1. In the GCP console, navigate to "Monitoring" > "Dashboards", and locate your custom dashboard (e.g., "Calculator App Dashboard").
 
-1. In the GCP console, navigate to "Monitoring" > "Dashboards", where you will see the custom "Calculator Application Dashboard".
+2. Dashboards may include:
+   - RTT latency per Pod
+   - API request counts (if integrated)
+   - CPU and Memory usage
 
-2. The monitoring dashboard includes:
-   - Request duration
-   - API request count
-   - CPU usage
-   - Memory usage
+### Logging
+
+- Navigate to "Logging" > "Logs Explorer"
+- Filter logs by `resource.type="k8s_container"` and container name (e.g., `node-web-app`)
+- Useful for debugging and monitoring application output
 
 ### Alerts
 
-The following alerts have been configured:
-
-- "High Request Duration Alert" triggered when the average request duration exceeds 500 milliseconds
+Sample alert policies (such as high request duration) can be configured in GCP Monitoring. These are optional and not required to complete the project.
 
 ## Cleaning Up Resources
 
-To avoid additional charges, be sure to clean up resources after completion:
+To avoid extra charges, clean up after testing:
 
 ```bash
 # Delete the GKE cluster
-gcloud container clusters delete calculator-cluster --region=us-central1
+gcloud container clusters delete calculator-cluster --region=australia-southeast1
 
-# Delete the images in Container Registry
-gcloud container images delete gcr.io/YOUR_PROJECT_ID/calculator-app:latest
+# Delete the image from Artifact Registry
+gcloud artifacts docker images delete australia-southeast1-docker.pkg.dev/YOUR_PROJECT_ID/calculator-repo/calculator-app
 ```
 
 ## Troubleshooting
 
-1. If MongoDB connection fails, check if the secrets are configured correctly.
+1. If MongoDB connection fails, check if secrets are configured correctly.
 
-2. If the application cannot be accessed, check the service and Ingress configuration.
+2. If the application is not accessible, check Service and external IP status.
 
-3. View GCP logs for more detailed error information:
-   ```bash
-   kubectl logs deployment/node-web-app
-   ```
+3. Check container logs:
 
-4. Monitor metrics and logs in the GCP console for insights into performance and issues.
+```bash
+kubectl logs deployment/node-web-app
+```
+
+4. Use Cloud Monitoring and Logs Explorer for further insight.
+
+
 
